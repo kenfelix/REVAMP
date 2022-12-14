@@ -1,0 +1,11 @@
+design
+graphics
+video
+cinema
+editor
+printer
+doctor
+nurse
+surgeon
+law
+scientist

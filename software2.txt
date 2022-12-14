@@ -1,0 +1,12 @@
+go
+ios
+andriod
+linux
+Transmission
+network
+cloud
+aws
+kernel
+AI
+rust
+c

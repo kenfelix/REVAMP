@@ -1,0 +1,12 @@
+software
+python
+php
+node
+web
+systems
+blockchain
+backend
+frontend
+ui/ux
+devops
+cloud
