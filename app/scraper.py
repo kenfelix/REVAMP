@@ -35,10 +35,22 @@ class Scraper:
     def _get_sensible_title(self, title: str):
         list_title = title.lower().split(" ")
         if list_title[0] == "remote":
-            new_title = " ".join([list_title[1], list_title[2]])
-        else:
-            new_title = " ".join([list_title[0], list_title[1], list_title[2]])
-        return new_title.title()
+            list_title.remove(list_title[0])
+        if "remote" in list_title[-1]:
+            list_title.remove(list_title[-1])
+        if "(" in list_title[-1]:
+            list_title.remove(list_title[-1])
+        if "backend" in list_title[-1] or "front end" in list_title[-1] or "frontend" in list_title[-1]:
+            word = list_title[-1].strip("(").strip(")")
+            list_title.remove(list_title[-1])
+            return f"{word} ".join(list_title)
+        try:
+            if int(list_title[-1]):
+                list_title.remove(list_title[-1])
+        except:
+            pass
+        
+        return " ".join(list_title)
         
     
     def _get_driver(self):
@@ -166,8 +178,6 @@ class Scraper:
             job_title = self._get_sensible_title(title=job_title)
             job_info = driver.find_element(by=By.XPATH, value="//div[@class=\"show-more-less-html__markup\"]").text
             required_skills = self._get_requirements(job_info)
-            
-            
             scraped_jobs["job title"] = job_title
             scraped_jobs["required skills"] = required_skills
             
