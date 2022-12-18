@@ -10,55 +10,25 @@ from config import settings
 import time
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
-from typing import List
+from math import ceil
+from typing import List, Optional
 
 
 def get_user_agent():
-    return UserAgent(verify_ssl=False).random
+    return UserAgent(verify_ssl=True).random
 
 @dataclass
 class Scraper:
     driver: webdriver = None
     job_title_file: str = "/home/hp/Desktop/my_projects/Revamp/job_titles"
-    
-    def _get_job_title(self, file: str):
-        try:
-            with open(file=file) as my_file:
-                string_file = my_file.read()
-                list_file = string_file.split("\n")
-        except:
-            raise "could not open file"
-        
-        return list(set(list_file))
-    
-    def _get_sensible_title(self, title: str):
-        list_title = title.lower().split(" ")
-        if list_title[0] == "remote":
-            list_title.remove(list_title[0])
-        if "remote" in list_title[-1]:
-            list_title.remove(list_title[-1])
-        if "(" in list_title[-1]:
-            list_title.remove(list_title[-1])
-        if "backend" in list_title[-1] or "front end" in list_title[-1] or "frontend" in list_title[-1]:
-            word = list_title[-1].strip("(").strip(")")
-            list_title.remove(list_title[-1])
-            return f"{word} ".join(list_title)
-        try:
-            if int(list_title[-1]):
-                list_title.remove(list_title[-1])
-        except:
-            pass
-        
-        return " ".join(list_title)
         
     
-    def _get_driver(self):
+    def __get_driver(self):
         if self.driver is None:
             user_agent = get_user_agent()
             options = Options()
             options.add_argument("--no-sandbox")
-            options.add_argument("--headless")
+            # options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument(f"user-agent={user_agent}")
             # options.add_argument('--start-maximized')
@@ -70,140 +40,94 @@ class Scraper:
             self.driver = driver
         return self.driver
     
-    def _check_login(self, url: str):
-        response = requests.get(url)
-        return response.url != settings.redirect_url
-    
-    def _linkedin_login(self, email: EmailStr, password: str):
-        login = self._check_login(url=settings.linkedin_home_url)
-        if not login:
-            driver = self._get_driver()
-            driver.get(url=settings.linkedin_login_url)
-            time.sleep(1)
-            email_field = driver.find_element(by=By.ID, value="username")
-            password_field = driver.find_element(by=By.ID, value="password")
-            email_field.send_keys(settings.linkedin_email)
-            password_field.send_keys(settings.linkedin_password)
-            login_button = driver.find_element(by=By.XPATH, value="//button[@data-litms-control-urn=\"login-submit\"]")
-            login_button.click()
-            WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.ID, "global-nav")))
-            print("Login Successful.")
+    def linkedin_login(self, email: EmailStr, password: str):
+        driver = self.__get_driver()
+        driver.get(url=settings.linkedin_login_url)
+        time.sleep(1)
+        email_field = driver.find_element(by=By.ID, value="username")
+        password_field = driver.find_element(by=By.ID, value="password")
+        email_field.send_keys(email)
+        password_field.send_keys(password)
+        login_button = driver.find_element(by=By.XPATH, value="//button[@data-litms-control-urn=\"login-submit\"]")
+        login_button.click()
+        WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.ID, "global-nav")))
+        print("Login Successful.")
         return
     
-    def _scrape_linkedin_job_links(self, search_params: str) -> list:
+    def scrape_linkedin_job_links(self, search_params: str) -> list:
         links: List = []
-        driver = self._get_driver()
+        driver = self.__get_driver()
         driver.get(url=f"https://www.linkedin.com/jobs/search/?currentJobId=3366945039&keywords={search_params}")
         try:
-            WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//button[@data-tracking-control-name=\"public_jobs_dismiss\"]"))).click()
+            job_count = driver.find_element(by=By.XPATH, value="//div[@class=\"jobs-search-results-list__title-heading\"]/small").text
+            job_count = int(job_count.split(" ")[0].replace(",", ""))
+            pages = ceil(job_count/25)
         except:
             pass
         
-        print("scrapping links", end='\r')
-        
-        i = 1
-        while i < 20:
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight - 1);")
-            i += 1
-            time.sleep(1)
-            
-            try:
-                WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label=\"Load more results\"]"))).click()
-                time.sleep(1)
-            except:
-                pass
-                time.sleep(1)
-                
-        jobs_block = driver.find_element(by=By.CLASS_NAME, value="jobs-search__results-list")
-        jobs_list = jobs_block.find_elements(by=By.CSS_SELECTOR, value="li")
         try:
-            for job in jobs_list:
-                all_links = job.find_elements(by=By.TAG_NAME, value="a")
-                for a in all_links:
-                    if "linkedin.com/jobs/view/" in str(a.get_attribute("href")):
-                        links.append(a.get_attribute("href"))
-                    else:
-                        pass
+            for page in range(1,(pages + 1)):
+                print(f"collecting the links in page {page}")
+                jobs_block = driver.find_element(by=By.CLASS_NAME, value="jobs-search-results-list")
+                jobs_list = jobs_block.find_elements(by=By.CSS_SELECTOR, value="li")
+            
+                for job in jobs_list:
+                    all_links = job.find_elements(by=By.TAG_NAME, value="a")
+                    for a in all_links:
+                        if "linkedin.com/jobs/view/" in str(a.get_attribute("href")) and a.get_attribute("href") not in links:
+                            links.append(a.get_attribute("href"))
+                        else:
+                            pass
+                        
+                    driver.execute_script("arguments[0].scrollIntoView();", job)
+                
+                driver.find_element(by=By.XPATH, value=f"//button[@aria-label=\"Page {page+1}\"]").click()
+                time.sleep(1)
         except:
             pass
         return links
-        
-       
-    def  _scrape_linkedin_jobs_links(self):
-        job_titles = self._get_job_title(self.job_title_file)
-        links = []
-        
-        for title in job_titles:
-            if title != '':
-                new_link = self._scrape_linkedin_job_links(search_params=title)
-                time.sleep(1)
-                links.extend(new_link)
-        return links
     
-    def _get_requirements(self, job_desc: str):
-        new_list = job_desc.lower().split("\n")
-        word_list = ["requirements", "qualifications", "skills", "you are", "expectations", "what we are looking for", "required skills & qualifications",
-                     "abilities", "what you bring to the table", "your profile", "qualifications and experience", "about you" "what we need from you?", "key skills/ experience required",
+    def __get_requirements(self, raw_text: str):
+        word_list = ["requirements", "qualifications", "skills", "you are", "expectations", "what we are looking for", "required skills",
+                     "abilities", "what you bring to the table", "your profile", "about you" "what we need from you?", "key skills",
                      "basic requirements", "minimum qualifications", "skills and experience", "the minimum criteria is the following",
-                     "Who we’re looking for", "qualifications & experience", "job requirements", "what you bring",
-                     "requirements:", "qualifications:", "skills:", "you are:", "expectations:", "what we are looking for:", "required skills & qualifications:",
-                     "abilities:", "what you bring to the table:", "your profile:", "qualifications and experience:", "about you:" "what we need from you:", "key skills/ experience required:",
-                     "basic requirements:", "minimum qualifications:", "skills and experience:", "the minimum criteria is the following:",
-                     "Who we’re looking for:", "qualifications & experience:", "job requirements:", "what you bring:",
+                     "Who we’re looking for", "job requirements", "what you bring", "key competencies", "task", "will be a plus",
+                     "nice to have", "desired skills", "job knowledge", "other skills", "Would be great if you brought",
+                     "the ideal candidate"
                      ]
-        final_list = []
+        require_list = []
         
-        for i in range(len(new_list)):
-            if new_list[i] == '' and new_list[i+1] in word_list and new_list[i+2] == '':
-                new_index = i+3
-        for i in range(new_index, len(new_list)):
-            if  new_list[i] == '':
-                break
-            else:
-                final_list.append(new_list[i])
+        doc = raw_text.lower().split("\n\n")
+        
+        for word in word_list:
+            for sent in doc:
+                if sent.startswith(word) and sent not in require_list:
+                    require_list.append(sent)
+        
             
-        return final_list
+        return "\n".join(require_list)
         
     
-    def _scarpe_link_info(self, link: str, link_index: int, links_len: int) -> dict:
+    def scarpe_link_info(self, link: str, link_index: int = 1, links_len: int = 1) -> Optional[dict]:
         scraped_jobs = {}
-        driver = self._get_driver()
+        driver = self.__get_driver()
         
         print(f"scrapping actual info\tlink(s) {link_index}/{links_len}", end="\r")
         try:
             driver.get(url=link)
             time.sleep(1)
-            driver.find_element(by=By.XPATH, value="//button[@aria-label=\"Show more, visually expands previously read content above\"]").click()
-            job_title = driver.find_element(by=By.XPATH, value="//h1[@class=\"top-card-layout__title font-sans text-lg papabear:text-xl font-bold leading-open text-color-text mb-0 topcard__title\"]").text
-            job_title = self._get_sensible_title(title=job_title)
-            job_info = driver.find_element(by=By.XPATH, value="//div[@class=\"show-more-less-html__markup\"]").text
-            required_skills = self._get_requirements(job_info)
-            scraped_jobs["job title"] = job_title
-            scraped_jobs["required skills"] = required_skills
-            
+            driver.find_element(by=By.CLASS_NAME, value="artdeco-card__actions").click()
+            top_content = driver.find_element(by=By.XPATH, value="//div[@class=\"p5\"]")
+            job_title = top_content.find_element(by=By.TAG_NAME, value="h1").text
+            job_info = driver.find_element(by=By.CLASS_NAME, value="jobs-description__content").text
+            job_info = self.__get_requirements(raw_text=job_info)
+            if job_info != '':
+                scraped_jobs["job title"] = job_title
+                scraped_jobs["required skills"] = job_info
+                return scraped_jobs
         except:
             pass
         
-        return scraped_jobs
-    
-    def scrape_linkedin_jobs(self):
-        jobs = []
-        links = self._scrape_linkedin_jobs_links()
-        
-        for link in links:
-            job = self._scarpe_link_info(link=link, link_index=links.index(link) + 1, links_len=len(links))
-            jobs.append(job)
-        
-        new_jobs = list(filter(lambda x: x != {}, jobs))
-            
-        return new_jobs
-        
-
+        return None
     
     
-    
-    # scrape from indeed 
-    # scrape from mustar 
-    
-     
-        
