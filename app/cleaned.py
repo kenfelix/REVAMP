@@ -1,22 +1,40 @@
+import json
+import re
 from dataclasses import dataclass
+
+import pytextrank
 import spacy
-from spacy.matcher import PhraseMatcher
 from skillNer.general_params import SKILL_DB
 from skillNer.skill_extractor_class import SkillExtractor
-# import pandas as pd
+from spacy.matcher import PhraseMatcher
+
 
 @dataclass
 class Clean:
-    
     def clean_skills(self, raw_text: str):
         nlp = spacy.load("en_core_web_lg")
         skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
         annotations = skill_extractor.annotate(raw_text).get("results")
         return annotations
-    
+
     def clean_title(self, raw_title: str):
-        return raw_title
-    
+        text = raw_title.lower()
+        patterns = re.compile(
+            "([\(\[].*?[\)\]])|(remote)|(senior)|(junior)|(sr)|(jnr)|(snr)|(jr)|(intern)|(lead)|(jobs)|(job)|(internship)|(\sat\s.*)|(-.*)"
+        )
+        text = re.sub(patterns, "", text)
+
+        nlp = spacy.load("en_core_web_lg")
+        nlp.add_pipe("textrank")
+
+        doc = nlp(text)
+        ranks = [phrase.rank for phrase in doc._.phrases if phrase.count == 1]
+        max_rank = max(ranks)
+
+        for phrase in doc._.phrases:
+            if phrase.rank == max_rank:
+                return phrase.text
+
     # def to_excel(self, file_name: str, sheet_name: str):
     #     cleaned_data = self.get_cleaned_data()
     #     df = pd.DataFrame(cleaned_data)
