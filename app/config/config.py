@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     redirect_url: str
     linkedin_home_url: str
     linkedin_login_url: str
+    rabbitmq_username: str
+    rabbitmq_password: str
+    rabbitmq_vhost: str
 
     class Config:
         env_file = ".env"

@@ -1,4 +1,3 @@
-import json
 import re
 from dataclasses import dataclass
 
@@ -12,10 +11,16 @@ from spacy.matcher import PhraseMatcher
 @dataclass
 class Clean:
     def clean_skills(self, raw_text: str):
+        skills = []
         nlp = spacy.load("en_core_web_lg")
         skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
-        annotations = skill_extractor.annotate(raw_text).get("results")
-        return annotations
+        annotations = skill_extractor.annotate(raw_text)
+        results = annotations.get("results")
+        for result in results:
+            matches = results.get(result)
+            for match in matches:
+                skills.append(match.get("doc_node_value"))
+        return skills
 
     def clean_title(self, raw_title: str):
         text = raw_title.lower()
@@ -29,11 +34,13 @@ class Clean:
 
         doc = nlp(text)
         ranks = [phrase.rank for phrase in doc._.phrases if phrase.count == 1]
-        max_rank = max(ranks)
+        if ranks != []:
+            max_rank = max(ranks)
 
-        for phrase in doc._.phrases:
-            if phrase.rank == max_rank:
-                return phrase.text
+            for phrase in doc._.phrases:
+                if phrase.rank == max_rank:
+                    return phrase.text
+        return None
 
     # def to_excel(self, file_name: str, sheet_name: str):
     #     cleaned_data = self.get_cleaned_data()

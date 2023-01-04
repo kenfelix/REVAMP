@@ -1,10 +1,9 @@
+import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import ceil
 from typing import List, Optional
 
-import requests
-from config import settings
 from fake_useragent import UserAgent
 from pydantic import EmailStr
 from selenium import webdriver
@@ -14,6 +13,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from ..config.config import settings
+
 
 def get_user_agent():
     return UserAgent(verify_ssl=True).random
@@ -22,14 +23,13 @@ def get_user_agent():
 @dataclass
 class Scraper:
     driver: webdriver = None
-    job_title_file: str = "/home/hp/Desktop/my_projects/Revamp/job_titles"
 
     def __get_driver(self):
         if self.driver is None:
             user_agent = get_user_agent()
             options = Options()
             options.add_argument("--no-sandbox")
-            # options.add_argument("--headless")
+            options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument(f"user-agent={user_agent}")
             # options.add_argument('--start-maximized')
@@ -57,11 +57,18 @@ class Scraper:
             EC.presence_of_element_located((By.ID, "global-nav"))
         )
         print("Login Successful.")
+        with open("cookies.json", "w") as f:
+            json.dump(driver.get_cookies(), f)
         return
 
     def scrape_linkedin_job_links(self, search_params: str) -> list:
         links: List = []
         driver = self.__get_driver()
+        driver.get("https://www.linkedin.com/feed")
+        with open("cookies.json", "r") as f:
+            cookies = json.load(f)
+        for cookie in cookies:
+            driver.add_cookie(cookie)
         driver.get(
             url=f"https://www.linkedin.com/jobs/search/?currentJobId=3366945039&keywords={search_params}"
         )
@@ -146,14 +153,20 @@ class Scraper:
 
         return "\n".join(require_list)
 
-    def scarpe_link_info(
-        self, link: str, link_index: int = 1, links_len: int = 1
-    ) -> Optional[dict]:
+    def scarpe_link_info(self, link: str) -> Optional[dict]:
         scraped_jobs = {}
         job_type = "associate"
         driver = self.__get_driver()
+        driver.get("https://www.linkedin.com/feed")
 
-        print(f"scrapping actual info\tlink(s) {link_index}/{links_len}", end="\r")
+        with open("cookies.json", "r") as f:
+            cookies = json.load(f)
+        try:
+            for cookie in cookies:
+                driver.add_cookie(cookie)
+        except:
+            pass
+
         try:
             driver.get(url=link)
             time.sleep(1)
@@ -162,14 +175,16 @@ class Scraper:
             job_title = top_content.find_element(
                 by=By.TAG_NAME, value="h1"
             ).text.lower()
-            job_type = top_content.find_element(
-                by=By.CLASS_NAME, value="jobs-unified-top-card__job-insight"
-            ).text.lower()
-            job_info = (
-                driver.find_element(by=By.CLASS_NAME, value="jobs-description__content")
-                .text.split(" · ")[1]
-                .lower()
+            job_type = (
+                top_content.find_element(
+                    by=By.CLASS_NAME, value="jobs-unified-top-card__job-insight"
+                )
+                .text.lower()
+                .split(" · ")[-1]
             )
+            job_info = driver.find_element(
+                by=By.CLASS_NAME, value="jobs-description__content"
+            ).text.lower()
             job_info = self.__get_requirements(raw_text=job_info).lower()
             if job_info != "":
                 scraped_jobs["job title"] = job_title
