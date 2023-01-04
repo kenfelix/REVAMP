@@ -33,7 +33,7 @@ class Scraper:
             options.binary_location = "/usr/bin/google-chrome-stable"
             options.add_argument("--no-sandbox")
             options.add_argument("--headless")
-            # options.add_argument("--disable-gpu")
+            options.add_argument("--disable-gpu")
             options.add_argument('--disable-dev-shm-usage')
             options.add_argument(f"user-agent={user_agent}")
             # options.add_argument('--start-maximized')
@@ -46,6 +46,9 @@ class Scraper:
             )
             self.driver = driver
         return self.driver
+    
+    def close_driver(self):
+        self.__get_driver().quit()
 
     def linkedin_login(self, email: EmailStr, password: str):
         driver = self.__get_driver()
@@ -59,6 +62,8 @@ class Scraper:
             by=By.XPATH, value='//button[@data-litms-control-urn="login-submit"]'
         )
         login_button.click()
+        if driver.current_url == "https://www.linkedin.com/error_pages/unsupported-browser.html":
+            return False
         WebDriverWait(driver, 100).until(
             EC.presence_of_element_located((By.ID, "global-nav"))
         )
