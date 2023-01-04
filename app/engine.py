@@ -7,6 +7,7 @@ from .celery import app
 s = Scraper()
 c = Clean()
 
+
 @app.task
 def scrape_links(search_params: str):
     links = s.scrape_linkedin_job_links(search_params=search_params)
