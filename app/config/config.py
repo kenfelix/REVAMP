@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     rabbitmq_username: str
     rabbitmq_password: str
     rabbitmq_vhost: str
+    mongodb_uri: str
 
     class Config:
         env_file = ".env"
