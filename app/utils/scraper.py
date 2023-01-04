@@ -62,8 +62,9 @@ class Scraper:
             by=By.XPATH, value='//button[@data-litms-control-urn="login-submit"]'
         )
         login_button.click()
-        if driver.current_url == "https://www.linkedin.com/error_pages/unsupported-browser.html":
-            return False
+        print(driver.current_url)
+        # if driver.current_url == "https://www.linkedin.com/error_pages/unsupported-browser.html":
+        #     return False
         WebDriverWait(driver, 100).until(
             EC.presence_of_element_located((By.ID, "global-nav"))
         )
