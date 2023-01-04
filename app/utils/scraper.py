@@ -65,7 +65,7 @@ class Scraper:
         print(driver.current_url)
         # if driver.current_url == "https://www.linkedin.com/error_pages/unsupported-browser.html":
         #     return False
-        WebDriverWait(driver, 100).until(
+        WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, "global-nav"))
         )
         print("Login Successful.")
