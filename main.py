@@ -1,5 +1,5 @@
 from app.config.config import settings
-from app.engine import s, scrape_links
+from app.engine import s, parse_key_words
 
 
 def start_engine():
@@ -7,7 +7,7 @@ def start_engine():
     # if login is False:
     #     s.close_driver()
     #     start_engine()
-    scrape_links.delay("graphics")
+    parse_key_words.delay()
 
 
 if __name__ == "__main__":

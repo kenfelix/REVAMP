@@ -9,6 +9,15 @@ c = Clean()
 
 
 @app.task
+def parse_key_words():
+    with open("search_parameters.txt", "r") as doc:
+        string_words = doc.read()
+    words = string_words.split("\n")
+    for word in words:
+        scrape_links.delay(word)
+
+
+@app.task
 def scrape_links(search_params: str):
     links = s.scrape_linkedin_job_links(search_params=search_params)
     scrape_info_from_links.delay(links)

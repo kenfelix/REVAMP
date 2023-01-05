@@ -187,13 +187,17 @@ class Scraper:
             job_title = top_content.find_element(
                 by=By.TAG_NAME, value="h1"
             ).text.lower()
-            job_type = (
+            job_types = (
                 top_content.find_element(
                     by=By.CLASS_NAME, value="jobs-unified-top-card__job-insight"
                 )
                 .text.lower()
-                .split(" · ")[-1]
+                .split(" · ")
             )
+            if len(job_types) > 1:
+                job_type = job_types[-1]
+            else:
+                job_type = "associate"
             job_info = driver.find_element(
                 by=By.CLASS_NAME, value="jobs-description__content"
             ).text.lower()
