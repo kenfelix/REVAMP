@@ -22,6 +22,7 @@ app.conf.beat_schedule = {
     "execute-every-5-munites": {
         "task": "app.engine.parse_key_words",
         "schedule": crontab(),
+        'args': (),
     }
 }
 
