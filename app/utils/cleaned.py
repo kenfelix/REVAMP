@@ -25,7 +25,7 @@ class Clean:
     def clean_title(self, raw_title: str):
         text = raw_title.lower()
         patterns = re.compile(
-            "([\(\[].*?[\)\]])|(remote)|(senior)|(junior)|(sr)|(jnr)|(snr)|(jr)|(intern)|(lead)|(jobs)|(job)|(internship)|(\sat\s.*)|(-.*)"
+            "([\(\[].*?[\)\]])|(remote)|(senior)|(junior)|(sr)|(jnr)|(snr)|(jr)|(intern)|(lead)|(jobs)|(job)|(internship)|(\sat\s.*)|(-.*)|(\sin\s.*)"
         )
         text = re.sub(patterns, "", text)
 

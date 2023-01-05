@@ -1,4 +1,5 @@
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from math import ceil
@@ -34,7 +35,7 @@ class Scraper:
             options.add_argument("--no-sandbox")
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")
-            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument("--disable-dev-shm-usage")
             options.add_argument(f"user-agent={user_agent}")
             # options.add_argument('--start-maximized')
             options.add_experimental_option("excludeSwitches", ["enable-logging"])
@@ -46,7 +47,7 @@ class Scraper:
             )
             self.driver = driver
         return self.driver
-    
+
     def close_driver(self):
         self.__get_driver().quit()
 
@@ -123,47 +124,49 @@ class Scraper:
             pass
         return links
 
-    def __get_requirements(self, raw_text: str):
-        word_list = [
-            "requirements",
-            "qualifications",
-            "skills",
-            "you are",
-            "expectations",
-            "what we are looking for",
-            "required skills",
-            "abilities",
-            "what you bring to the table",
-            "your profile",
-            "about you" "what we need from you?",
-            "key skills",
-            "basic requirements",
-            "minimum qualifications",
-            "skills and experience",
-            "the minimum criteria is the following",
-            "Who we’re looking for",
-            "job requirements",
-            "what you bring",
-            "key competencies",
-            "task",
-            "will be a plus",
-            "nice to have",
-            "desired skills",
-            "job knowledge",
-            "other skills",
-            "Would be great if you brought",
-            "the ideal candidate",
-        ]
-        require_list = []
+    def __find_start_end_words(self, text: str, start_words: list, end_words: list):
+        start_pattern = "|".join(start_words)
+        end_pattern = "|".join(end_words)
 
-        doc = raw_text.lower().split("\n\n")
+        start_match = re.search(start_pattern, text)
+        if start_match:
+            start_index = start_match.start()
+            end_match = re.search(end_pattern, text[start_index:])
+            if end_match:
+                end_index = end_match.start() + start_index
+                return (start_match.group(), end_match.group())
+            else:
+                return (start_match.group(), None)
+        else:
+            return (None, None)
 
-        for word in word_list:
-            for sent in doc:
-                if sent.startswith(word) and sent not in require_list:
-                    require_list.append(sent)
+    def __get_text_between(self, text: str, start: str, end: str):
+        if start is not None and end is not None:
+            pattern = re.compile(f"{start}(.*?){end}", re.DOTALL)
+        else:
+            pattern = re.compile(f"{start}(.*)", re.DOTALL)
+        return pattern.search(text).group(1)
 
-        return "\n".join(require_list)
+    def __get_requirements(self, text: str):
+        with open("start_words.txt", "r") as doc:
+            start_string_words = doc.read()
+        start_words = start_string_words.split("\n")
+
+        with open("end_words.txt", "r") as doc:
+            end_string_words = doc.read()
+        end_words = end_string_words.split("\n")
+
+        (start, end) = self.__find_start_end_words(
+            text=text, start_words=start_words, end_words=end_words
+        )
+
+        if start is None and end is None:
+            requirement = ""
+        elif start is None and end is not None:
+            requirement = ""
+        else:
+            requirement = self.__get_text_between(text=text, start=start, end=end)
+        return requirement
 
     def scarpe_link_info(self, link: str) -> Optional[dict]:
         scraped_jobs = {}
@@ -201,10 +204,10 @@ class Scraper:
             job_info = driver.find_element(
                 by=By.CLASS_NAME, value="jobs-description__content"
             ).text.lower()
-            job_info = self.__get_requirements(raw_text=job_info).lower()
+            job_requirement = self.__get_requirements(text=job_info).lower()
             if job_info != "":
                 scraped_jobs["job title"] = job_title
-                scraped_jobs["required skills"] = job_info
+                scraped_jobs["required skills"] = job_requirement
                 scraped_jobs["experience level"] = job_type
                 return scraped_jobs
         except:

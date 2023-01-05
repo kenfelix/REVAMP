@@ -1,5 +1,5 @@
 from app.config.config import settings
-from app.engine import s, parse_key_words
+from app.engine import parse_key_words, s
 
 
 def start_engine():
