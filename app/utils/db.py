@@ -11,6 +11,7 @@ class Job(BaseModel):
     experience_level: str
     skills: List[str]
     created_at: datetime = datetime.utcnow()
+    updated_at: datetime = datetime.utcnow()
     timestamp: datetime = datetime.timestamp(datetime.utcnow())
     
 class JobUpdate(BaseModel):
