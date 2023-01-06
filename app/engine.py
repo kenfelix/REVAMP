@@ -21,11 +21,11 @@ def parse_key_words():
 @app.task
 def scrape_links(search_params: str):
     links = s.scrape_linkedin_job_links(search_params=search_params)
-    scrape_info_from_links.delay(links)
+    scrape_info_from_link.delay(links)
 
 
 @app.task
-def scrape_info_from_links(links: list):
+def scrape_info_from_link(links: list):
     for link in links:
         new_raw_job = s.scarpe_link_info(link=link)
         if new_raw_job is None:
