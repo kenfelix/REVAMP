@@ -206,9 +206,9 @@ class Scraper:
             ).text.lower()
             job_requirement = self.__get_requirements(text=job_info).lower()
             if job_info != "":
-                scraped_jobs["job title"] = job_title
-                scraped_jobs["required skills"] = job_requirement
-                scraped_jobs["experience level"] = job_type
+                scraped_jobs["job_title"] = job_title
+                scraped_jobs["experience_level"] = job_type
+                scraped_jobs["skills"] = job_requirement
                 return scraped_jobs
         except:
             pass

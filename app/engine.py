@@ -37,13 +37,13 @@ def scrape_info_from_links(links: list):
 @app.task
 def clean(raw_job: dict):
     new_dict = {}
-    title = c.clean_title(raw_title=raw_job.get("job title"))
-    rate = raw_job.get("experience level")
-    skills = c.clean_skills(raw_text=raw_job.get("required skills"))
+    title = c.clean_title(raw_title=raw_job.get("job_title"))
+    rate = raw_job.get("experience_level")
+    skills = c.clean_skills(raw_text=raw_job.get("skills"))
     if skills != []:
-        new_dict["job title"] = title
-        new_dict["experience level"] = rate
-        new_dict["required skills"] = skills
+        new_dict["job_title"] = title
+        new_dict["experience_level"] = rate
+        new_dict["skills"] = skills
         store_in_db.delay(new_dict)
     return None
 
