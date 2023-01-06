@@ -17,10 +17,17 @@ class Clean:
         annotations = skill_extractor.annotate(raw_text)
         results = annotations.get("results")
         for result in results:
-            matches = results.get(result)
-            for match in matches:
-                skills.append(match.get("doc_node_value"))
-        return skills
+            if result == "full_matches":
+                matches = results.get(result)
+                for match in matches:
+                    skills.append(match.get("doc_node_value"))
+            else:
+                matches = results.get(result)
+                for match in matches:
+                    if match.get("type") == "fullUni" or match.get("type") == "oneToken":
+                        skills.append(match.get("doc_node_value"))
+                
+        return list(set(skills))
 
     def clean_title(self, raw_title: str):
         text = raw_title.lower()

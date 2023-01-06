@@ -166,6 +166,8 @@ class Scraper:
             requirement = ""
         else:
             requirement = self.__get_text_between(text=text, start=start, end=end)
+            if start in requirement or end in requirement:
+                requirement = requirement.replace(start, "").replace(end, "")
         return requirement
 
     def scarpe_link_info(self, link: str) -> Optional[dict]:
