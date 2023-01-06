@@ -19,9 +19,9 @@ app.conf.update(
 )
 
 app.conf.beat_schedule = {
-    "execute-every-5-munites": {
+    "execute-every-3-days": {
         "task": "app.engine.parse_key_words",
-        "schedule": crontab(),
+        "schedule": crontab(hour=0, minute=0, day_of_week="*/3"),
         "args": (),
     }
 }
