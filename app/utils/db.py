@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from ..config.db import get_db
 
