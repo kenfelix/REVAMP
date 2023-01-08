@@ -1,6 +1,5 @@
 requirements
 qualifications
-skills
 you are
 expectations
 what we are looking for
@@ -8,7 +7,6 @@ required skills
 abilities
 what you bring to the table
 your profile
-about you
 what we need from you?
 key skills
 basic requirements
@@ -30,3 +28,5 @@ what we seek
 you will bring
 fuel your passion
 all you need is
+skills
+about you

@@ -1,7 +1,7 @@
 import json
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from math import ceil
 from typing import List, Optional
 
@@ -11,7 +11,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
@@ -31,9 +30,9 @@ class Scraper:
         if self.driver is None:
             user_agent = get_user_agent()
             options = Options()
-            options.binary_location = "/usr/bin/google-chrome-stable"
+            # options.binary_location = "/usr/bin/google-chrome-stable"
             options.add_argument("--no-sandbox")
-            options.add_argument("--headless")
+            # options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument(f"user-agent={user_agent}")
@@ -125,15 +124,14 @@ class Scraper:
         return links
 
     def __find_start_end_words(self, text: str, start_words: list, end_words: list):
-        start_pattern = "|".join(start_words)
-        end_pattern = "|".join(end_words)
+        start_pattern = r"\n({})".format("|".join(start_words))
+        end_pattern = r"\n({})".format("|".join(end_words))
 
         start_match = re.search(start_pattern, text)
         if start_match:
             start_index = start_match.start()
             end_match = re.search(end_pattern, text[start_index:])
             if end_match:
-                end_index = end_match.start() + start_index
                 return (start_match.group(), end_match.group())
             else:
                 return (start_match.group(), None)
@@ -159,15 +157,13 @@ class Scraper:
         (start, end) = self.__find_start_end_words(
             text=text, start_words=start_words, end_words=end_words
         )
-
+        print(start, end)
         if start is None and end is None:
             requirement = ""
         elif start is None and end is not None:
             requirement = ""
         else:
             requirement = self.__get_text_between(text=text, start=start, end=end)
-            if start in requirement or end in requirement:
-                requirement = requirement.replace(start, "").replace(end, "")
         return requirement
 
     def scarpe_link_info(self, link: str) -> Optional[dict]:
@@ -207,7 +203,13 @@ class Scraper:
                 by=By.CLASS_NAME, value="jobs-description__content"
             ).text.lower()
             job_requirement = self.__get_requirements(text=job_info).lower()
+            industry = driver.find_element(
+                by=By.XPATH, value='//div[@class="t-14 mt5"]'
+            ).text.lower()
+            industry = re.sub(r"\d.*", "", industry)
+            print(f"industry: {industry}")
             if job_info != "":
+                scraped_jobs["industry"] = industry
                 scraped_jobs["job_title"] = job_title
                 scraped_jobs["experience_level"] = job_type
                 scraped_jobs["skills"] = job_requirement
