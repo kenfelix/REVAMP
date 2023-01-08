@@ -24,14 +24,17 @@ class Clean:
             else:
                 matches = results.get(result)
                 for match in matches:
-                    if match.get("type") == "fullUni" or match.get("type") == "oneToken":
+                    if (
+                        match.get("type") == "fullUni"
+                        or match.get("type") == "oneToken"
+                    ):
                         skills.append(match.get("doc_node_value"))
-        
+
         with open("not_skills.txt", "r") as doc:
             start_string_words = doc.read()
         not_skill = start_string_words.split("\n")
-        
-        skills = [skill for skill in skills if skill not in not_skill]                    
+
+        skills = [skill for skill in skills if skill not in not_skill]
         return list(set(skills))
 
     def clean_title(self, raw_title: str):
