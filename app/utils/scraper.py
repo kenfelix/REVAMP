@@ -208,7 +208,7 @@ class Scraper:
             ).text.lower()
             industry = re.sub(r"\d.*", "", industry)
             print(f"industry: {industry}")
-            if job_info != "":
+            if job_requirement != "":
                 scraped_jobs["industry"] = industry
                 scraped_jobs["job_title"] = job_title
                 scraped_jobs["experience_level"] = job_type
