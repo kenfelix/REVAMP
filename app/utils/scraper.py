@@ -62,7 +62,6 @@ class Scraper:
             by=By.XPATH, value='//button[@data-litms-control-urn="login-submit"]'
         )
         login_button.click()
-        print(driver.current_url)
         # if driver.current_url == "https://www.linkedin.com/error_pages/unsupported-browser.html":
         #     return False
         WebDriverWait(driver, 10).until(
@@ -157,7 +156,6 @@ class Scraper:
         (start, end) = self.__find_start_end_words(
             text=text, start_words=start_words, end_words=end_words
         )
-        print(start, end)
         if start is None and end is None:
             requirement = ""
         elif start is None and end is not None:
