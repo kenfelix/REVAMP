@@ -185,7 +185,7 @@ class Scraper:
             top_content = driver.find_element(by=By.XPATH, value='//div[@class="p5"]')
             job_title = top_content.find_element(
                 by=By.TAG_NAME, value="h1"
-            ).text.lower()
+            ).text.lower().strip()
             job_types = (
                 top_content.find_element(
                     by=By.CLASS_NAME, value="jobs-unified-top-card__job-insight"
@@ -194,7 +194,7 @@ class Scraper:
                 .split(" · ")
             )
             if len(job_types) > 1:
-                job_type = job_types[-1]
+                job_type = job_types[-1].strip()
             else:
                 job_type = "associate"
             job_info = driver.find_element(
@@ -204,7 +204,7 @@ class Scraper:
             industry = driver.find_element(
                 by=By.XPATH, value='//div[@class="t-14 mt5"]'
             ).text.lower()
-            industry = re.sub(r"\d.*", "", industry)
+            industry = re.sub(r"\d.*", "", industry).strip()
             if job_requirement != "":
                 scraped_jobs["industry"] = industry
                 scraped_jobs["job_title"] = job_title
