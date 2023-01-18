@@ -1,7 +1,6 @@
 import re
 from dataclasses import dataclass
 
-import pytextrank
 import spacy
 from skillNer.general_params import SKILL_DB
 from skillNer.skill_extractor_class import SkillExtractor

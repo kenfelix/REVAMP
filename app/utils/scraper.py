@@ -62,8 +62,6 @@ class Scraper:
             by=By.XPATH, value='//button[@data-litms-control-urn="login-submit"]'
         )
         login_button.click()
-        # if driver.current_url == "https://www.linkedin.com/error_pages/unsupported-browser.html":
-        #     return False
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, "global-nav"))
         )
@@ -183,9 +181,11 @@ class Scraper:
             time.sleep(1)
             driver.find_element(by=By.CLASS_NAME, value="artdeco-card__actions").click()
             top_content = driver.find_element(by=By.XPATH, value='//div[@class="p5"]')
-            job_title = top_content.find_element(
-                by=By.TAG_NAME, value="h1"
-            ).text.lower().strip()
+            job_title = (
+                top_content.find_element(by=By.TAG_NAME, value="h1")
+                .text.lower()
+                .strip()
+            )
             job_types = (
                 top_content.find_element(
                     by=By.CLASS_NAME, value="jobs-unified-top-card__job-insight"
