@@ -10,7 +10,7 @@ app = Celery(
     "app",
     broker=f"amqp://{username}:{password}@localhost:5672/{vhost}",
     backend="rpc://",
-    include=["app.engine", "app.utils.scraper", "app.utils.db", "app.utils.cleaned"],
+    include=["app.engine", "app.utils.scraper", "app.utils.cleaned"],
 )
 
 # Optional configuration, see the application user guide.

@@ -1,3 +1,9 @@
 {
-  "python.analysis.extraPaths": ["./app/utils"]
+  "python.analysis.extraPaths": [
+    "./app/utils"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.formatting.provider": "none"
 }

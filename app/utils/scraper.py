@@ -30,19 +30,24 @@ class Scraper:
         if self.driver is None:
             user_agent = get_user_agent()
             options = Options()
-            options.binary_location = "/usr/bin/google-chrome-stable"
+            # options.binary_location = "/usr/bin/google-chrome-stable"
             options.add_argument("--no-sandbox")
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument(f"user-agent={user_agent}")
             # options.add_argument('--start-maximized')
-            options.add_experimental_option("excludeSwitches", ["enable-logging"])
-            options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            options.add_experimental_option(
+                "excludeSwitches", ["enable-logging"]
+            )
+            options.add_experimental_option(
+                "excludeSwitches", ["enable-automation"]
+            )
             options.add_experimental_option("useAutomationExtension", False)
             options.add_experimental_option("detach", True)
             driver = webdriver.Chrome(
-                service=ChromeService(ChromeDriverManager().install()), options=options
+                service=ChromeService(ChromeDriverManager().install()),
+                options=options,
             )
             self.driver = driver
         return self.driver
@@ -59,7 +64,8 @@ class Scraper:
         email_field.send_keys(email)
         password_field.send_keys(password)
         login_button = driver.find_element(
-            by=By.XPATH, value='//button[@data-litms-control-urn="login-submit"]'
+            by=By.XPATH,
+            value='//button[@data-litms-control-urn="login-submit"]',
         )
         login_button.click()
         WebDriverWait(driver, 10).until(
@@ -97,20 +103,25 @@ class Scraper:
                 jobs_block = driver.find_element(
                     by=By.CLASS_NAME, value="jobs-search-results-list"
                 )
-                jobs_list = jobs_block.find_elements(by=By.CSS_SELECTOR, value="li")
+                jobs_list = jobs_block.find_elements(
+                    by=By.CSS_SELECTOR, value="li"
+                )
 
                 for job in jobs_list:
                     all_links = job.find_elements(by=By.TAG_NAME, value="a")
                     for a in all_links:
                         if (
-                            "linkedin.com/jobs/view/" in str(a.get_attribute("href"))
+                            "linkedin.com/jobs/view/"
+                            in str(a.get_attribute("href"))
                             and a.get_attribute("href") not in links
                         ):
                             links.append(a.get_attribute("href"))
                         else:
                             pass
 
-                    driver.execute_script("arguments[0].scrollIntoView();", job)
+                    driver.execute_script(
+                        "arguments[0].scrollIntoView();", job
+                    )
 
                 driver.find_element(
                     by=By.XPATH, value=f'//button[@aria-label="Page {page+1}"]'
@@ -120,7 +131,9 @@ class Scraper:
             pass
         return links
 
-    def __find_start_end_words(self, text: str, start_words: list, end_words: list):
+    def __find_start_end_words(
+        self, text: str, start_words: list, end_words: list
+    ):
         start_pattern = r"\n({})".format("|".join(start_words))
         end_pattern = r"\n({})".format("|".join(end_words))
 
@@ -159,7 +172,9 @@ class Scraper:
         elif start is None and end is not None:
             requirement = ""
         else:
-            requirement = self.__get_text_between(text=text, start=start, end=end)
+            requirement = self.__get_text_between(
+                text=text, start=start, end=end
+            )
         return requirement
 
     def scarpe_link_info(self, link: str) -> Optional[dict]:
@@ -179,8 +194,12 @@ class Scraper:
         try:
             driver.get(url=link)
             time.sleep(1)
-            driver.find_element(by=By.CLASS_NAME, value="artdeco-card__actions").click()
-            top_content = driver.find_element(by=By.XPATH, value='//div[@class="p5"]')
+            driver.find_element(
+                by=By.CLASS_NAME, value="artdeco-card__actions"
+            ).click()
+            top_content = driver.find_element(
+                by=By.XPATH, value='//div[@class="p5"]'
+            )
             job_title = (
                 top_content.find_element(by=By.TAG_NAME, value="h1")
                 .text.lower()
@@ -188,7 +207,8 @@ class Scraper:
             )
             job_types = (
                 top_content.find_element(
-                    by=By.CLASS_NAME, value="jobs-unified-top-card__job-insight"
+                    by=By.CLASS_NAME,
+                    value="jobs-unified-top-card__job-insight",
                 )
                 .text.lower()
                 .split(" · ")
@@ -200,18 +220,19 @@ class Scraper:
             job_info = driver.find_element(
                 by=By.CLASS_NAME, value="jobs-description__content"
             ).text.lower()
-            job_requirement = self.__get_requirements(text=job_info).lower()
+            # job_requirement = self.__get_requirements(text=job_info).lower()
             industry = driver.find_element(
                 by=By.XPATH, value='//div[@class="t-14 mt5"]'
             ).text.lower()
             industry = re.sub(r"\d.*", "", industry).strip()
-            if job_requirement != "":
-                scraped_jobs["industry"] = industry
-                scraped_jobs["job_title"] = job_title
-                scraped_jobs["experience_level"] = job_type
-                scraped_jobs["skills"] = job_requirement
-                return scraped_jobs
+            # if job_requirement != "":
+            scraped_jobs["industry"] = industry
+            scraped_jobs["job_title"] = job_title
+            scraped_jobs["experience_level"] = job_type
+            scraped_jobs["skills"] = job_info
+            # return scraped_jobs
+            print(scraped_jobs)
         except:
             pass
 
-        return None
+        return scraped_jobs

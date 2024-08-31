@@ -1,8 +1,11 @@
 from app.utils.cleaned import Clean
-from app.utils.db import insert_job
+import os
+
+# from app.utils.db import insert_job
 from app.utils.scraper import Scraper
 
 from .celery import app
+import pandas as pd
 
 s = Scraper()
 c = Clean()
@@ -26,30 +29,37 @@ def scrape_links(search_params: str):
 
 @app.task
 def scrape_info_from_link(links: list):
+    jobs = []
+    filename = "/home/hp/Desktop/linkedin_jobs.csv"
     for link in links:
         new_raw_job = s.scarpe_link_info(link=link)
-        if new_raw_job is None:
-            pass
+        if new_raw_job:
+            jobs.append(new_raw_job)
+
+    if jobs:
+        df = pd.DataFrame(jobs)
+        if os.path.getsize(filename) > 0:
+            df.to_csv(filename, mode="a", index=False, header=False)
         else:
-            clean.delay(new_raw_job)
+            df.to_csv(filename, index=False)
 
 
-@app.task
-def clean(raw_job: dict):
-    new_dict = {}
-    industry = raw_job.get("industry")
-    title = c.clean_title(raw_title=raw_job.get("job_title"))
-    experience_level = raw_job.get("experience_level")
-    skills = c.clean_skills(raw_text=raw_job.get("skills"))
-    if skills != []:
-        new_dict["industry"] = industry
-        new_dict["job_title"] = title
-        new_dict["experience_level"] = experience_level
-        new_dict["skills"] = skills
-        store_in_db.delay(new_dict)
-    return None
+# @app.task
+# def clean(raw_job: dict):
+#     new_dict = {}
+#     industry = raw_job.get("industry")
+#     title = c.clean_title(raw_title=raw_job.get("job_title"))
+#     experience_level = raw_job.get("experience_level")
+#     skills = c.clean_skills(raw_text=raw_job.get("skills"))
+#     if skills != []:
+#         new_dict["industry"] = industry
+#         new_dict["job_title"] = title
+#         new_dict["experience_level"] = experience_level
+#         new_dict["skills"] = skills
+#         store_in_db.delay(new_dict)
+#     return None
 
 
-@app.task
-def store_in_db(job: dict):
-    insert_job(job)
+# @app.task
+# def store_in_db(job: dict):
+#   insert_job(job)

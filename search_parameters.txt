@@ -1,56 +1,27 @@
-human resource
-information technology
-Telecommunications
-software services
-e-commerce
-healthcare
-biomedical
-pharmaceutical
-electrical engineering
-electronics
-computer networking
-microwave transmission
-LTE
-product manager
-account manager
-customer success manager
-business development
-marketing manager
-administrative officer
-logistics officer
-social media manager
-digital marketer
-business intelligence analyst
-data analyst
-powerbi developer
-microsoft office
-G-suite
-strategy manager
-engineering manager
-Telecommunications project manager
-insights and analytics
-client account manager
-growth manager
-software developer
-business analyst
-project manager
-program manager
-operations manager
-chief operations officer
-chief operating officer
-chief executive officer
-chief financial officer
-chief risk officer
-chief of staff
-information technology director
-internal auditor
-risk manager
-auditor
-accountant
-compliance manager
-business process manager
-risk analyst
-business consultant
-managing consultant
 sales director
 field implementation specialist
+software developer
+software engineer
+devops
+teaching
+sales
+social worker
+military
+security
+media
+influencer
+cinematography
+editor
+developer
+designer
+engineer
+intern
+Recruiter
+Trainer
+Technician
+Writer
+Quality assurance analyst
+Finacial advisor
+architect
+consultant
+analyst
